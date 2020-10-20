@@ -1,0 +1,20 @@
+[Unit]
+Description="Health-check daemon for Magnificent service API"
+Requires=network-online.target
+After=network-online.target
+StartLimitInterval=180
+StartLimitBurst=18
+
+[Service]
+Type=simple
+User=root
+Group=root
+Environment=HEALTH_CHECK_LOG_FILEPATH=/var/log/magnificent.log
+ExecStart=/usr/local/bin/python3.8 /home/ross/code/3_webserver_monitor/webserver_monitor/healthcheck_daemon.py http://localhost:12345/ 2
+KillMode=process
+Restart=always
+RestartSec=4
+LimitNOFILE=8192
+
+[Install]
+WantedBy=multi-user.target

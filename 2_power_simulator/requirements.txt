@@ -1,0 +1,7 @@
+numba==0.51.2
+Quart==0.13.1
+Quart-Trio==0.5.1
+Hypercorn==0.11.1
+pandapower==2.4.0
+redis==3.5.3
+trio==0.17.0
