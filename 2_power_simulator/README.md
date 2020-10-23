@@ -22,12 +22,6 @@ Finally, a Dockerfile has to be created that would install all the dependencies 
 In order to submit your solution to this task a fork of this repo has to be created, and the solution can be committed to the fork.
 
 
-
-#### Solution Limitations 
-* multiple processes with hypercorn isn't working
-* the websocket handler isn't detecting disconnecting clients so it's not freeing up resources properly
-
-
 ### Setup
 
 ##### Redis Setup:
