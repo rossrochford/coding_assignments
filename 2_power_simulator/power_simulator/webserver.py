@@ -2,14 +2,19 @@ import asyncio
 import functools
 import json
 import os
+from typing import Any, Awaitable, Callable, Coroutine, Optional, Union
 import uuid
+import warnings
 
-import redis
-import trio
-from hypercorn.config import Config
+from hypercorn.config import Config as HyperConfig
+from hypercorn.typing import ASGIFramework
+from hypercorn.trio.run import worker_serve
 from hypercorn.trio import serve as hypercorn_serve
 from quart import Quart, websocket
+from quart.logging import create_serving_logger
 from quart_trio import QuartTrio
+import redis
+import trio
 
 from power_simulator.redis_util import redis__queue_push, redis__wait_for_key
 
@@ -23,134 +28,8 @@ SIMULATION_RESULT_KEY = 'simulation-result'
 
 
 redis_cli = redis.StrictRedis(host=REDIS_HOSTNAME, port=REDIS_PORT)
-hypercorn_config = Config.from_mapping(worker_class='trio', bind='0.0.0.0:5000')
+hypercorn_config = HyperConfig.from_mapping(worker_class='trio', bind='0.0.0.0:5000')
 
-
-import warnings
-from typing import Any, Awaitable, Callable, Coroutine, Optional, Union
-import warnings
-from typing import Any, Awaitable, Callable, Coroutine, Optional, Union
-
-import trio
-from hypercorn.config import Config as HyperConfig
-#from hypercorn.trio import serve
-from quart.logging import create_serving_logger
-from hypercorn.typing import ASGIFramework
-from hypercorn.trio.run import worker_serve
-
-
-async def serve__with_background_task(
-    app: ASGIFramework,
-    config: Config,
-    *,
-    shutdown_trigger: Optional[Callable[..., Awaitable[None]]] = None,
-    task_status: trio._core._run._TaskStatus = trio.TASK_STATUS_IGNORED,
-) -> None:
-    if config.debug:
-        warnings.warn("The config `debug` has no affect when using serve", Warning)
-    if config.workers != 1:
-        warnings.warn("The config `workers` has no affect when using serve", Warning)
-
-    serve_func = functools.partial(
-        worker_serve, app, config, shutdown_trigger=shutdown_trigger, task_status=task_status
-    )
-    #await worker_serve(app, config, shutdown_trigger=shutdown_trigger, task_status=task_status)
-    import pdb; pdb.set_trace()
-    async with trio.open_nursery() as nursery:
-        nursery.start_soon(serve_func)
-        nursery.start_soon(forward_results_from_redis)
-
-
-class QuartTrio2(QuartTrio):
-
-    def run(  # type: ignore
-        self,
-        host: str = "127.0.0.1",
-        port: int = 5000,
-        debug: Optional[bool] = None,
-        use_reloader: bool = True,
-        ca_certs: Optional[str] = None,
-        certfile: Optional[str] = None,
-        keyfile: Optional[str] = None,
-        **kwargs: Any,
-    ) -> None:
-        if kwargs:
-            warnings.warn(
-                f"Additional arguments, {','.join(kwargs.keys())}, are not supported.\n"
-                "They may be supported by Hypercorn, which is the ASGI server Quart "
-                "uses by default. This method is meant for development and debugging."
-            )
-
-        scheme = "https" if certfile is not None and keyfile is not None else "http"
-        print(f"Running on {scheme}://{host}:{port} (CTRL + C to quit)")  # noqa: T001, T002
-
-        trio.run(self.run_task2, host, port, debug, use_reloader, ca_certs, certfile, keyfile)
-
-    def run_task2(
-        self,
-        host: str = "127.0.0.1",
-        port: int = 5000,
-        debug: Optional[bool] = None,
-        use_reloader: bool = True,
-        ca_certs: Optional[str] = None,
-        certfile: Optional[str] = None,
-        keyfile: Optional[str] = None,
-        shutdown_trigger: Optional[Callable[..., Awaitable[None]]] = None,
-    ) -> Coroutine[None, None, None]:
-
-        config = HyperConfig()
-        config.access_log_format = "%(h)s %(r)s %(s)s %(b)s %(D)s"
-        config.accesslog = create_serving_logger()
-        config.bind = [f"{host}:{port}"]
-        config.ca_certs = ca_certs
-        config.certfile = certfile
-        if debug is not None:
-            config.debug = debug
-        config.errorlog = config.accesslog
-        config.keyfile = keyfile
-        config.use_reloader = use_reloader
-
-        return serve__with_background_task(self, config)
-
-    '''
-    def run(  # type: ignore
-        self,
-        host: str = "127.0.0.1",
-        port: int = 5000,
-        debug: Optional[bool] = None,
-        use_reloader: bool = True,
-        ca_certs: Optional[str] = None,
-        certfile: Optional[str] = None,
-        keyfile: Optional[str] = None,
-        **kwargs: Any,
-    ) -> None:
-
-        if kwargs:
-            warnings.warn(
-                f"Additional arguments, {','.join(kwargs.keys())}, are not supported.\n"
-                "They may be supported by Hypercorn, which is the ASGI server Quart "
-                "uses by default. This method is meant for development and debugging."
-            )
-
-        scheme = "https" if certfile is not None and keyfile is not None else "http"
-        print(f"Running on {scheme}://{host}:{port} (CTRL + C to quit)")  # noqa: T001, T002
-
-        # a little hacky
-        run_task = functools.partial(
-            self.run_task,
-            host, port, debug, use_reloader,
-            ca_certs, certfile, keyfile
-        )
-        run_task2 = self._run_with_background_task(run_task)
-        #trio.run(task, host, port, debug, use_reloader, ca_certs, certfile, keyfile)
-        trio.run(run_task2)
-
-    async def _run_with_background_task(self, main_run_task):
-        warnings.warn('running background task')
-        async with trio.open_nursery() as nursery:
-            #nursery.start_soon(main_run_task)
-            nursery.start_soon(forward_results_from_redis)
-    '''
 
 
 app = QuartTrio(__name__)
