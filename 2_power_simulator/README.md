@@ -42,6 +42,15 @@ $ source venv/bin/activate
 $ pip install -r requirements.txt
 ```
 
+#### Optional: install websocket client
+
+```
+# to install websocat on ubuntu run:
+sudo apt-get install libssl1.1
+wget https://github.com/vi/websocat/releases/download/v1.6.0/websocat_1.6.0_ssl1.1_amd64.deb
+sudo dpkg -i websocat_1.6.0_ssl1.1_amd64.deb
+```
+
 ##### Run webserver
 
 ```
@@ -51,7 +60,7 @@ $ ./run_server.sh
 ##### Test webserver
 
 ```
-# connect with a websocket client to subscribe to updates
+# connect with a websocket client to subscribe to updates, you can install websocat here: https://github.com/vi/websocat
 $ websocat ws://127.0.0.1:5000/simulator-subscribe
 
 # run simulation

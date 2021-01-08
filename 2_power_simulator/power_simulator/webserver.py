@@ -31,7 +31,6 @@ redis_cli = redis.StrictRedis(host=REDIS_HOSTNAME, port=REDIS_PORT)
 hypercorn_config = HyperConfig.from_mapping(worker_class='trio', bind='0.0.0.0:5000')
 
 
-
 app = QuartTrio(__name__)
 app.SUBSCRIBER_CHANNELS = set()  # local queues for each subscribing websocket client
 
@@ -66,6 +65,7 @@ async def run_simulation_view():
     Runs simulation as a background task, publishes
     to WS_NOTIFY_KEY when complete.
     """
+
     result_json_str = await _do_background_task(
         redis_cli, SIMULATION_RESULT_KEY, 'run-simulation', None
     )
@@ -137,9 +137,9 @@ async def forward_results_from_redis(config, nursery):
 
     while True:
         item = await trio.to_thread.run_sync(
-            # cancellable so hypercorn/trio can clean up
+            # cancellable so hypercorn/trio can clean up on exit
             iterator.__next__, cancellable=True
-        )
+        )  # need to catch iterator exception?
 
         if item['type'] != 'message':
             continue
