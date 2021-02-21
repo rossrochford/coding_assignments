@@ -116,7 +116,7 @@ async def simulator_websocket_subscribe():
             async for message in receive_channel:
                 await websocket.send(message)
     except trio.Cancelled:
-        pass
+        print('websocket disconnected')
 
     app.SUBSCRIBER_CHANNELS.remove(send_channel)
 

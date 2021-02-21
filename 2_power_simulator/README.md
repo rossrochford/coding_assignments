@@ -33,6 +33,15 @@ In order to submit your solution to this task a fork of this repo has to be crea
 $ redis-cli config set notify-keyspace-events KAE
 ```
 
+#### Optional: install websocket client
+
+```
+# to install websocat on ubuntu run:
+keyspa
+wget https://github.com/vi/websocat/releases/download/v1.6.0/websocat_1.6.0_ssl1.1_amd64.deb
+sudo dpkg -i websocat_1.6.0_ssl1.1_amd64.deb
+```
+
 ##### Setup virtualenv
 
 ```
@@ -40,15 +49,6 @@ $ cd 2_power_simulator/
 $ python3 -m venv venv/
 $ source venv/bin/activate
 $ pip install -r requirements.txt
-```
-
-#### Optional: install websocket client
-
-```
-# to install websocat on ubuntu run:
-sudo apt-get install libssl1.1
-wget https://github.com/vi/websocat/releases/download/v1.6.0/websocat_1.6.0_ssl1.1_amd64.deb
-sudo dpkg -i websocat_1.6.0_ssl1.1_amd64.deb
 ```
 
 ##### Run webserver
